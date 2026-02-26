@@ -1,6 +1,10 @@
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { useState } from 'react';
 
 export function Dashboard() {
+  const [readSources, setReadSources] = useState<Set<number>>(new Set());
+  const [selectedSource, setSelectedSource] = useState<number | null>(null);
+
   const recentSources = [
     '2026년에 주목해야 할 AI 코딩의 주요 토픽과 트렌드',
     'AI 에이전트가 서로 고용하는 작업 마켓플레이스 Pinchw...',
@@ -13,6 +17,11 @@ export function Dashboard() {
     '아이펀즈 스켈(Agent Skillz)',
     'AI가 본 직접도 – NFT 탄 토링라프트로 되는 만 박'
   ];
+
+  const handleSourceClick = (idx: number) => {
+    setSelectedSource(idx);
+    setReadSources(prev => new Set(prev).add(idx));
+  };
 
   const ideas = [
     '드론 기반 시설물 검진 및 리포트 자동화',
@@ -45,6 +54,15 @@ export function Dashboard() {
     { name: '검증', time: '5일', percentage: 100 }
   ];
 
+  const monthlyActivity = [
+    { month: '25.09', count: 12 },
+    { month: '25.10', count: 18 },
+    { month: '25.11', count: 25 },
+    { month: '25.12', count: 31 },
+    { month: '26.01', count: 28 },
+    { month: '26.02', count: 35 }
+  ];
+
   const sourceDistribution = [
     { label: '커워크/AI시스', percentage: '18%' },
     { label: 'Physical AI', percentage: '17%' },
@@ -72,11 +90,23 @@ export function Dashboard() {
             <h2 className="text-sm font-semibold">최근 수집 소스</h2>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
-            <div className="space-y-2">
+            <div className="space-y-0">
               {recentSources.map((source, idx) => (
                 <div
                   key={idx}
-                  className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed hover:text-black dark:hover:text-white cursor-pointer py-1"
+                  onClick={() => handleSourceClick(idx)}
+                  className={`
+                    text-xs leading-relaxed cursor-pointer py-3 border-b border-neutral-100 dark:border-neutral-800
+                    ${readSources.has(idx) && selectedSource !== idx 
+                      ? 'text-neutral-400 dark:text-neutral-600' 
+                      : 'text-neutral-900 dark:text-neutral-100 font-medium'
+                    }
+                    ${selectedSource === idx 
+                      ? 'border-l-2 border-l-blue-500 pl-3 bg-blue-50/50 dark:bg-blue-950/20' 
+                      : 'pl-0'
+                    }
+                    hover:text-black dark:hover:text-white
+                  `}
                 >
                   {source}
                 </div>
@@ -90,39 +120,45 @@ export function Dashboard() {
           <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 flex-shrink-0">
             <h2 className="text-base font-semibold">요약/정리</h2>
           </div>
-          <div className="flex-1 overflow-y-auto px-6 py-4">
-            <div className="max-w-4xl">
+          <div className="flex-1 flex flex-col overflow-hidden px-6 py-4">
+            <div className="max-w-4xl flex-1 flex flex-col overflow-hidden">
               {/* Summary Card */}
-              <div className="bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-6 mb-6">
-                <h3 className="font-semibold mb-3">독립 찬성</h3>
-                <div className="space-y-3 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">
-                  <p>
-                    Donec a odio orci. Donec tincidunt tempus facilisis. Mauris nisi ex, sollicitudin in ex in, fermentum porttitor nibh. Nullam iaculis sed dui vitae condimentum.
-                  </p>
-                  
-                  <div>
-                    <p className="font-semibold mb-2">Phasellus</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>Tristique velit et lacus vehicula gravida</li>
-                      <li>Nam faucibus turpis quis porttitor consequat. Donec consectetur feugiat vulputate.</li>
-                      <li>Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.</li>
-                      <li>Praesent sollicitudin eu sapien ac efficitur. Duis dictum id et erat malesuada eleifend.</li>
-                    </ul>
-                  </div>
+              <div className="bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg flex-1 flex flex-col overflow-hidden">
+                {/* Scrollable Content Area */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  <h3 className="font-semibold mb-3">독립 찬성</h3>
+                  <div className="space-y-3 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    <p>
+                      Donec a odio orci. Donec tincidunt tempus facilisis. Mauris nisi ex, sollicitudin in ex in, fermentum porttitor nibh. Nullam iaculis sed dui vitae condimentum.
+                    </p>
+                    
+                    <div>
+                      <p className="font-semibold mb-2">Phasellus</p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li>Tristique velit et lacus vehicula gravida</li>
+                        <li>Nam faucibus turpis quis porttitor consequat. Donec consectetur feugiat vulputate.</li>
+                        <li>Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.</li>
+                        <li>Praesent sollicitudin eu sapien ac efficitur. Duis dictum id et erat malesuada eleifend.</li>
+                      </ul>
+                    </div>
 
-                  <div>
-                    <p className="font-semibold text-xs text-neutral-500 dark:text-neutral-400 mb-1">키워드</p>
-                    <p>fermentum, porttitor, nibh, Nullam, iaculis, sed</p>
-                  </div>
+                    <div>
+                      <p className="font-semibold text-xs text-neutral-500 dark:text-neutral-400 mb-1">키워드</p>
+                      <p>fermentum, porttitor, nibh, Nullam, iaculis, sed</p>
+                    </div>
 
-                  <div>
-                    <p className="font-semibold text-xs text-neutral-500 dark:text-neutral-400 mb-1">원본 링크</p>
-                    <a href="https://www.youtube.com/watch?Yv=ZR466JnC5tU" className="text-blue-600 dark:text-blue-400 hover:underline text-xs">
-                      https://www.youtube.com/watch?Yv=ZR466JnC5tU
-                    </a>
+                    <div>
+                      <p className="font-semibold text-xs text-neutral-500 dark:text-neutral-400 mb-1">원본 링크</p>
+                      <a href="https://www.youtube.com/watch?Yv=ZR466JnC5tU" className="text-blue-600 dark:text-blue-400 hover:underline text-xs">
+                        https://www.youtube.com/watch?Yv=ZR466JnC5tU
+                      </a>
+                    </div>
                   </div>
+                </div>
 
-                  <div className="flex items-center gap-4 pt-2">
+                {/* Fixed Footer with Buttons */}
+                <div className="border-t border-neutral-200 dark:border-neutral-700 p-6 flex-shrink-0">
+                  <div className="flex items-center gap-4 mb-3">
                     <button className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white">
                       <ThumbsUp className="w-4 h-4" />
                     </button>
@@ -131,7 +167,7 @@ export function Dashboard() {
                     </button>
                   </div>
 
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2">
                     <button className="px-3 py-1 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded text-xs hover:bg-neutral-50 dark:hover:bg-neutral-600">
                       소스 추후 확대
                     </button>
@@ -149,43 +185,65 @@ export function Dashboard() {
       {/* Peer Briefing Section */}
       <div className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
         <div className="px-6 py-6">
-          <h2 className="text-base font-semibold mb-4">피어브리핑</h2>
+          <h2 className="text-base font-semibold mb-4">파이프라인</h2>
           
-          {/* Tabs */}
-          <div className="flex gap-4 border-b border-neutral-200 dark:border-neutral-800 mb-4">
-            <button className="pb-2 border-b-2 border-black dark:border-white font-medium text-sm">
-              아이디어 <span className="text-neutral-500 dark:text-neutral-400">(23)</span>
-            </button>
-            <button className="pb-2 text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm">
-              사업 제안 <span className="text-neutral-400 dark:text-neutral-500">(8)</span>
-            </button>
-            <button className="pb-2 text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm">
-              컴샵자 <span className="text-neutral-400 dark:text-neutral-500">(0)</span>
-            </button>
-            <button className="pb-2 text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm">
-              검증 ox / 동료 <span className="text-neutral-400 dark:text-neutral-500">(0)</span>
-            </button>
-          </div>
-
-          {/* Ideas Grid - with horizontal scroll */}
-          <div className="overflow-x-auto pb-2">
-            <div className="flex gap-6 min-w-max">
-              <div className="w-64">
+          {/* Pipeline Stages Grid */}
+          <div className="grid grid-cols-4 gap-6">
+            {/* Stage 1: 아이디어 */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">
+                아이디어 <span className="text-neutral-500 dark:text-neutral-400 font-normal">(23)</span>
+              </h3>
+              <div className="space-y-0">
                 {ideas.slice(0, 10).map((idea, idx) => (
-                  <div key={idx} className="text-xs py-2 text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white cursor-pointer">
+                  <div 
+                    key={idx} 
+                    className="text-xs py-2 text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white cursor-pointer border-b border-neutral-100 dark:border-neutral-800 last:border-b-0"
+                  >
                     {idea}
                   </div>
                 ))}
               </div>
-              <div className="w-64">
-                {proposals.map((proposal, idx) => (
-                  <div key={idx} className="text-xs py-2 text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white cursor-pointer flex items-center gap-2">
-                    <span>{proposal.title}</span>
-                    {proposal.status && (
-                      <span className="text-[10px] text-neutral-500 dark:text-neutral-400">{proposal.status}</span>
-                    )}
+            </div>
+
+            {/* Stage 2: 사업 제안 */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">
+                사업 제안 <span className="text-neutral-500 dark:text-neutral-400 font-normal">(8)</span>
+              </h3>
+              <div className="space-y-0">
+                {proposals.slice(0, 10).map((proposal, idx) => (
+                  <div 
+                    key={idx} 
+                    className="text-xs py-2 text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white cursor-pointer border-b border-neutral-100 dark:border-neutral-800 last:border-b-0"
+                  >
+                    {proposal.title}
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Stage 3: 형상화 */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">
+                형상화 <span className="text-neutral-500 dark:text-neutral-400 font-normal">(0)</span>
+              </h3>
+              <div className="space-y-0">
+                <div className="text-xs py-2 text-neutral-400 dark:text-neutral-600">
+                  진행 중인 항목 없음
+                </div>
+              </div>
+            </div>
+
+            {/* Stage 4: 검증 */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">
+                검증 <span className="text-neutral-500 dark:text-neutral-400 font-normal">(0)</span>
+              </h3>
+              <div className="space-y-0">
+                <div className="text-xs py-2 text-neutral-400 dark:text-neutral-600">
+                  진행 중인 항목 없음
+                </div>
               </div>
             </div>
           </div>
@@ -193,7 +251,7 @@ export function Dashboard() {
       </div>
 
       {/* Statistics Section - with scroll */}
-      <div className="bg-white dark:bg-neutral-900 overflow-y-auto">
+      <div className="bg-white dark:bg-neutral-900">
         <div className="p-6">
           <h2 className="text-base font-semibold mb-6">통계</h2>
           
@@ -201,17 +259,52 @@ export function Dashboard() {
             {/* Monthly Activity Chart */}
             <div>
               <h3 className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-3">월별 활동 현황</h3>
-              <div className="flex items-end h-48 gap-2">
-                {['25.09', '25.10', '25.11', '25.12', '26.01', '26.02'].map((month, idx) => (
-                  <div key={idx} className="flex-1 flex flex-col items-center">
-                    <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-t" style={{ height: `${20 + idx * 15}%` }}></div>
-                    <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-2">{month}</span>
-                  </div>
-                ))}
+              <div className="flex items-end h-48 gap-2 relative">
+                {/* Line Chart (Cumulative) */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+                  <polyline
+                    points="8.33%,70% 25%,50% 41.67%,30% 58.33%,15% 75%,20% 91.67%,5%"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="text-blue-500"
+                  />
+                  {/* Data points */}
+                  {['8.33%,70%', '25%,50%', '41.67%,30%', '58.33%,15%', '75%,20%', '91.67%,5%'].map((point, idx) => {
+                    const [x, y] = point.split(',');
+                    return (
+                      <circle
+                        key={idx}
+                        cx={x}
+                        cy={y}
+                        r="3"
+                        fill="currentColor"
+                        className="text-blue-500"
+                      />
+                    );
+                  })}
+                </svg>
+
+                {/* Bar Chart */}
+                {monthlyActivity.map((data, idx) => {
+                  const maxCount = Math.max(...monthlyActivity.map(m => m.count));
+                  const heightPercentage = (data.count / maxCount) * 100;
+                  
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full relative z-10">
+                      <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mb-1">{data.count}</span>
+                      <div 
+                        className="w-full bg-neutral-300 dark:bg-neutral-700 rounded-t" 
+                        style={{ height: `${heightPercentage}%`, minHeight: '8px' }}
+                      ></div>
+                      <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-2 absolute -bottom-6">{data.month}</span>
+                    </div>
+                  );
+                })}
               </div>
               <div className="flex justify-between items-center mt-2">
-                <span className="text-xs text-neutral-500 dark:text-neutral-400">온 2주</span>
-                <button className="text-xs text-neutral-500 dark:text-neutral-400">— 출근/벌써</button>
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">최근 6개월</span>
+                <button className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white">전체 보기</button>
               </div>
             </div>
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Plus, Send, Settings as SettingsIcon, ThumbsUp, ThumbsDown, Menu, X, File, ChevronDown, ChevronUp, Trash2, Share2, Users, MessageSquare, Clock, CheckCircle, Circle, Loader2, ArrowRight, Link as LinkIcon, Upload, Globe, Search, FolderOpen, Tag, FileText, XCircle, Sparkles, BarChart3, Target, TrendingUp, Layers, Compass, PenTool, Play, Eye, EyeOff, GripVertical, MoreHorizontal, Lightbulb, Zap, Pencil, Check, ToggleLeft, ToggleRight, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { Plus, Send, Settings as SettingsIcon, ThumbsUp, ThumbsDown, Menu, X, File, ChevronDown, ChevronUp, Trash2, Share2, Users, MessageSquare, Clock, CheckCircle, Circle, Loader2, ArrowRight, Link as LinkIcon, Upload, Globe, Search, FolderOpen, Tag, FileText, XCircle, Sparkles, BarChart3, Target, TrendingUp, Layers, Compass, PenTool, Play, Eye, EyeOff, GripVertical, MoreHorizontal, MoreVertical, ExternalLink, Lightbulb, Zap, Pencil, Check, ToggleLeft, ToggleRight, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
 
 interface Idea {
   id: string;
@@ -7,6 +7,7 @@ interface Idea {
   content?: string;
   isMine: boolean;
   createdAt: Date;
+  lastModified: Date;
   stage: number; // 0-6
   sources: string[];
   collaborators?: string[];
@@ -92,7 +93,7 @@ const defaultMethods: AnalysisMethod[] = [
     sections: [
       { id: 's', title: '강점 (Strengths)', content: '• AI 코딩 자동화 기술의 높은 성숙도\n• 기존 개발 인프라와의 높은 호환성\n• 드론 하드웨어 비용의 지속적 하락 추세', color: 'blue' },
       { id: 'w', title: '약점 (Weaknesses)', content: '• 초기 시스템 구축에 높은 투자 비용 필요\n• 드론 운용 관련 규제 및 인증 절차 복잡\n• 전문 인력 확보의 어려움', color: 'red' },
-      { id: 'o', title: '기회 (Opportunities)', content: '• 노후 인프라 점검 시장의 급격한 성장\n• 정부의 스마트시티 정책 확대\n• ESG 경영 트렌드에 따른 안전관리 수요 증가', color: 'green' },
+      { id: 'o', title: '기��� (Opportunities)', content: '• 노후 인프라 점검 시장의 급격한 성장\n• 정부의 스마트시티 정책 확대\n• ESG 경영 트렌드에 따른 안전관리 수요 증가', color: 'green' },
       { id: 't', title: '위협 (Threats)', content: '• 대기업의 시장 진입 가능성\n• 드론 비행 규제 강화 리스크\n• 기술 표준화 미비로 인한 시장 파편화', color: 'orange' },
     ],
   },
@@ -109,7 +110,7 @@ const defaultMethods: AnalysisMethod[] = [
     sections: [
       { id: 'tam', title: '시장 규모 (TAM/SAM/SOM)', content: '• TAM: 글로벌 드론 서비스 시장 $45B (2027)\n• SAM: 국내 시설물 점검 드론 시장 ₩8,500억\n• SOM: 초기 타겟 공공 인프라 점검 ₩850억', color: 'blue' },
       { id: 'comp', title: '경쟁 환경', content: '• 직접 경쟁: 드론맵, 에어로센스 등 5개사\n• 간접 경쟁: 전통 점검 업체 약 200개사\n• 차별점: AI 리포트 자동화 + 예측 정비', color: 'purple' },
-      { id: 'trend', title: '성장 트렌드', content: '• 연평균 성장률(CAGR) 24.7% 예상\n• 디지털 트윈 연계 시장 급성장\n• 자율비행 기술 발전으로 운영 효율화', color: 'green' },
+      { id: 'trend', title: '성장 트렌드', content: '• 연평균 성장률(CAGR) 24.7% 예상\n• 디지털 트윈 연계 시장 급성장\n• 자율비행 기술 발전���로 운영 효율화', color: 'green' },
     ],
   },
   {
@@ -318,8 +319,23 @@ export function Ideas() {
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [showAddSourcePanel, setShowAddSourcePanel] = useState(false);
   const [previewSourceId, setPreviewSourceId] = useState<string | null>('3');
+  const [openSourceMenuId, setOpenSourceMenuId] = useState<string | null>(null);
 
   const sourceCategories = ['전체', 'AI & 자동화', '웹 & 기술', '개발 도구', '비즈니스 & 투자'];
+
+  const getTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    const diffMonths = Math.floor(diffMs / 2592000000);
+
+    if (diffMins < 60) return `${diffMins}분 전`;
+    if (diffHours < 24) return `${diffHours}시간 전`;
+    if (diffDays < 30) return `${diffDays}일 전`;
+    return `${diffMonths}개월 전`;
+  };
 
   const [myIdeas, setMyIdeas] = useState<Idea[]>([
     { 
@@ -327,6 +343,7 @@ export function Ideas() {
       title: '로봇 기반 원격 근무 시스템', 
       isMine: true, 
       createdAt: new Date(), 
+      lastModified: new Date(Date.now() - 3600000), // 1시간 전
       stage: 6,
       sources: ['1', '2'],
       collaborators: ['김정원', '이영희'],
@@ -339,6 +356,7 @@ export function Ideas() {
       title: '통합 모빌리티&로봇 등록/관리 사업', 
       isMine: true, 
       createdAt: new Date(), 
+      lastModified: new Date(Date.now() - 259200000), // 3일 전
       stage: 4,
       sources: ['3', '4'],
       collaborators: ['김정원']
@@ -348,6 +366,7 @@ export function Ideas() {
       title: 'AI-Ready Data&컨설팅 기반 사업화', 
       isMine: true, 
       createdAt: new Date(), 
+      lastModified: new Date(Date.now() - 2592000000), // 1개월 전
       stage: 2,
       sources: ['5'],
       collaborators: ['김정원', '박민수']
@@ -355,9 +374,9 @@ export function Ideas() {
   ]);
 
   const [teamIdeas] = useState<Idea[]>([
-    { id: '4', title: '로봇 기반 원격 근무 시스템', isMine: false, createdAt: new Date(), stage: 5, sources: ['1', '2'], collaborators: ['박민수', '최수진'] },
-    { id: '5', title: '통합 모빌리티&로봇 등록/관리 사업', isMine: false, createdAt: new Date(), stage: 6, sources: ['2', '3'], collaborators: ['이영희'] },
-    { id: '6', title: 'AI-Ready Data&컨설팅 기반 사업화', isMine: false, createdAt: new Date(), stage: 3, sources: ['4'], collaborators: ['박민수'] },
+    { id: '4', title: '로봇 기반 원격 근무 시스템', isMine: false, createdAt: new Date(), lastModified: new Date(Date.now() - 7200000), stage: 5, sources: ['1', '2'], collaborators: ['박민수', '최수진'] },
+    { id: '5', title: '통합 모빌리티&로봇 등록/관리 사업', isMine: false, createdAt: new Date(), lastModified: new Date(Date.now() - 172800000), stage: 6, sources: ['2', '3'], collaborators: ['이영희'] },
+    { id: '6', title: 'AI-Ready Data&컨설팅 기반 사업화', isMine: false, createdAt: new Date(), lastModified: new Date(Date.now() - 604800000), stage: 3, sources: ['4'], collaborators: ['박민수'] },
   ]);
 
   const [sources, setSources] = useState<Source[]>([
@@ -746,21 +765,14 @@ export function Ideas() {
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-neutral-300 dark:border-neutral-700">
                   <h2 className="text-base font-bold">내 아이디어</h2>
                   <button
-                    onClick={() => setShowCollaborators(!showCollaborators)}
-                    className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white flex items-center gap-1"
+                    onClick={handleCreateNew}
+                    className="px-3 py-1.5 bg-black dark:bg-white text-white dark:text-black rounded text-xs font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors flex items-center gap-1.5"
                   >
-                    <Users className="w-3.5 h-3.5" />
-                    협업자
+                    <Plus className="w-3.5 h-3.5" />
+                    새 아이디어
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {/* New Idea Button */}
-                  <button
-                    onClick={handleCreateNew}
-                    className="w-full flex items-center justify-center h-[42px] border border-dashed border-neutral-400 dark:border-neutral-600 rounded-lg text-sm text-neutral-500 dark:text-neutral-400 hover:border-neutral-600 dark:hover:border-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
-                  >
-                    + 새 아이디어
-                  </button>
 
                   {myIdeas.map((idea) => {
                     const sc = stageColors[idea.stage] || stageColors[0];
@@ -799,18 +811,10 @@ export function Ideas() {
 
                         {/* Meta icons */}
                         <div className="flex items-center gap-1.5 text-neutral-400 dark:text-neutral-500 flex-shrink-0">
-                          {idea.collaborators && idea.collaborators.length > 0 && (
-                            <span className="flex items-center gap-0.5 text-[10px]">
-                              <Users className="w-3 h-3" />
-                              {idea.collaborators.length}
-                            </span>
-                          )}
-                          {idea.comments && idea.comments.length > 0 && (
-                            <span className="flex items-center gap-0.5 text-[10px]">
-                              <MessageSquare className="w-3 h-3" />
-                              {idea.comments.length}
-                            </span>
-                          )}
+                          <span className="flex items-center gap-0.5 text-[10px]">
+                            <Clock className="w-3 h-3" />
+                            {getTimeAgo(idea.lastModified)}
+                          </span>
                         </div>
 
                         {/* Delete on hover */}
@@ -871,13 +875,11 @@ export function Ideas() {
                           <span className="opacity-60">{idea.stage + 1}/7</span>
                         </span>
 
-                        {/* Collaborators */}
-                        {idea.collaborators && idea.collaborators.length > 0 && (
-                          <span className="flex items-center gap-0.5 text-neutral-400 dark:text-neutral-500 text-[10px] flex-shrink-0">
-                            <Users className="w-3 h-3" />
-                            {idea.collaborators.length}
-                          </span>
-                        )}
+                        {/* Last Modified Time */}
+                        <span className="flex items-center gap-0.5 text-neutral-400 dark:text-neutral-500 text-[10px] flex-shrink-0">
+                          <Clock className="w-3 h-3" />
+                          {getTimeAgo(idea.lastModified)}
+                        </span>
                       </div>
                     );
                   })}
@@ -1066,23 +1068,6 @@ export function Ideas() {
                   </p>
                 </div>
               )}
-              <h4 className="text-[10px] font-medium mb-2 text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">진행 단계</h4>
-              <div className="space-y-2">
-                {stageLabels.map((label, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    {getStageIcon(index)}
-                    <span className={`text-xs ${
-                      index === ideaStage 
-                        ? 'font-semibold text-black dark:text-white' 
-                        : index < ideaStage 
-                        ? 'text-neutral-700 dark:text-neutral-300' 
-                        : 'text-neutral-400'
-                    }`}>
-                      {label}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
@@ -1516,21 +1501,7 @@ export function Ideas() {
               )}
 
               {ideaStage >= 1 && (
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-semibold">선택된 소스</h3>
-                    <button
-                      onClick={() => setShowAddSourcePanel(!showAddSourcePanel)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${
-                        showAddSourcePanel
-                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700'
-                          : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-transparent'
-                      }`}
-                    >
-                      <Plus className={`w-3.5 h-3.5 transition-transform ${showAddSourcePanel ? 'rotate-45' : ''}`} />
-                      소스 추가
-                    </button>
-                  </div>
+                <div className="space-y-4">
 
                   {/* Collapsible Add Source Panel */}
                   {showAddSourcePanel && (
@@ -1799,13 +1770,50 @@ export function Ideas() {
                                 {item.size && (
                                   <span className="text-[9px] text-neutral-400 flex-shrink-0">{item.size}</span>
                                 )}
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteUploadedItem(item.id); }}
-                                  className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-all flex-shrink-0"
-                                  title="삭제"
-                                >
-                                  <Trash2 className="w-3 h-3 text-red-400" />
-                                </button>
+                                
+                                {/* More menu */}
+                                <div className="relative opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenSourceMenuId(openSourceMenuId === item.id ? null : item.id);
+                                    }}
+                                    className="p-0.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors"
+                                  >
+                                    <MoreVertical className="w-3.5 h-3.5 text-neutral-400" />
+                                  </button>
+                                  
+                                  {openSourceMenuId === item.id && (
+                                    <>
+                                      <div className="fixed inset-0 z-10" onClick={() => setOpenSourceMenuId(null)} />
+                                      <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg py-1 z-20">
+                                        {item.type === 'url' && (
+                                          <a
+                                            href={item.name}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 px-3 py-1.5 text-[10px] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                                            onClick={() => setOpenSourceMenuId(null)}
+                                          >
+                                            <ExternalLink className="w-3 h-3" />
+                                            링크 이동
+                                          </a>
+                                        )}
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteUploadedItem(item.id);
+                                            setOpenSourceMenuId(null);
+                                          }}
+                                          className="w-full flex items-center gap-2 px-3 py-1.5 text-[10px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                          삭제
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -1848,6 +1856,50 @@ export function Ideas() {
                                     {src.category}
                                   </span>
                                 )}
+                                
+                                {/* More menu */}
+                                <div className="relative opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenSourceMenuId(openSourceMenuId === src.id ? null : src.id);
+                                    }}
+                                    className="p-0.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors"
+                                  >
+                                    <MoreVertical className="w-3.5 h-3.5 text-neutral-400" />
+                                  </button>
+                                  
+                                  {openSourceMenuId === src.id && (
+                                    <>
+                                      <div className="fixed inset-0 z-10" onClick={() => setOpenSourceMenuId(null)} />
+                                      <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg py-1 z-20">
+                                        {src.link && (
+                                          <a
+                                            href={src.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 px-3 py-1.5 text-[10px] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                                            onClick={() => setOpenSourceMenuId(null)}
+                                          >
+                                            <ExternalLink className="w-3 h-3" />
+                                            링크 이동
+                                          </a>
+                                        )}
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleToggleSource(src.id);
+                                            setOpenSourceMenuId(null);
+                                          }}
+                                          className="w-full flex items-center gap-2 px-3 py-1.5 text-[10px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                          삭제
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -1921,21 +1973,48 @@ export function Ideas() {
                                     }`}>
                                       {ps.content}
                                     </p>
-                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                    
+                                    {/* More menu */}
+                                    <div className="relative opacity-0 group-hover:opacity-100 transition-opacity">
                                       <button
-                                        onClick={(e) => { e.stopPropagation(); handleStartEditPrompt(ps.id, ps.content); }}
-                                        className="p-0.5 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded"
-                                        title="수정"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setOpenSourceMenuId(openSourceMenuId === ps.id ? null : ps.id);
+                                        }}
+                                        className="p-0.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors"
                                       >
-                                        <Pencil className="w-3 h-3 text-purple-400" />
+                                        <MoreVertical className="w-3.5 h-3.5 text-neutral-400" />
                                       </button>
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); handleDeletePromptSource(ps.id); }}
-                                        className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded"
-                                        title="삭제"
-                                      >
-                                        <Trash2 className="w-3 h-3 text-red-400" />
-                                      </button>
+                                      
+                                      {openSourceMenuId === ps.id && (
+                                        <>
+                                          <div className="fixed inset-0 z-10" onClick={() => setOpenSourceMenuId(null)} />
+                                          <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg py-1 z-20">
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleStartEditPrompt(ps.id, ps.content);
+                                                setOpenSourceMenuId(null);
+                                              }}
+                                              className="w-full flex items-center gap-2 px-3 py-1.5 text-[10px] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                                            >
+                                              <Pencil className="w-3 h-3" />
+                                              수정
+                                            </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeletePromptSource(ps.id);
+                                                setOpenSourceMenuId(null);
+                                              }}
+                                              className="w-full flex items-center gap-2 px-3 py-1.5 text-[10px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                            >
+                                              <Trash2 className="w-3 h-3" />
+                                              삭제
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
                                     </div>
                                   </div>
                                 )}
@@ -2017,13 +2096,6 @@ export function Ideas() {
             {/* Top Bar */}
             <div className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <button
-                  onClick={toggleLeftPanel}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
-                  title={leftSidebarOpen ? '소스 패널 접기' : '소스 패널 열기'}
-                >
-                  {leftSidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
-                </button>
                 <input
                   type="text"
                   value={ideaTitle}
@@ -2066,14 +2138,6 @@ export function Ideas() {
                     저장
                   </button>
                 )}
-                <div className="w-px h-5 bg-neutral-200 dark:bg-neutral-700 mx-1" />
-                <button
-                  onClick={toggleRightPanel}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
-                  title={rightSidebarOpen ? 'AI 어시스턴트 접기' : 'AI 어시스턴트 열기'}
-                >
-                  {rightSidebarOpen ? <PanelRightClose className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
-                </button>
               </div>
             </div>
 
@@ -3041,7 +3105,10 @@ export function Ideas() {
                       </div>
 
                       {/* Content */}
-                      <div className="flex-1 min-w-0">
+                      <div 
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => handleToggleProposalOption(option.id)}
+                      >
                         <h3 className="text-sm font-medium mb-1 pr-6">{option.title}</h3>
                         {option.expanded && (
                           <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
@@ -3052,7 +3119,10 @@ export function Ideas() {
 
                       {/* Expand/Collapse Button */}
                       <button
-                        onClick={() => handleToggleProposalExpanded(option.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleProposalExpanded(option.id);
+                        }}
                         className="flex-shrink-0 p-1 -mr-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded transition-colors"
                       >
                         {option.expanded ? (
